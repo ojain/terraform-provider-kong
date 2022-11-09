@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/kong/go-kong/kong"
@@ -221,7 +222,15 @@ func createKongPluginRequestFromResourceData(d *schema.ResourceData) (*kong.Plug
 		pluginRequest.Service = &kong.Service{
 			ID: serviceID,
 		}
+	} else { // Check for service_name
+		serviceName := readIdPtrFromResource(d, "service_name")
+		if serviceName != nil {
+			pluginRequest.Service = &kong.Service{
+				Name: serviceName,
+			}
+		}
 	}
+
 	// Build Route Configuration
 	routeID := readIdPtrFromResource(d, "route_id")
 	if routeID != nil {
