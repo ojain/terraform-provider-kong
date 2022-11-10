@@ -35,6 +35,11 @@ func resourceKongPlugin() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
+			"service_name": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: false,
+			},
 			"route_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -72,7 +77,7 @@ func resourceKongPlugin() *schema.Resource {
 
 func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 
-	pluginRequest, err := createKongPluginRequestFromResourceData(d)
+	pluginRequest, err := createKongPluginRequestFromResourceData(d, meta)
 	if err != nil {
 		return err
 	}
@@ -91,7 +96,7 @@ func resourceKongPluginCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceKongPluginUpdate(d *schema.ResourceData, meta interface{}) error {
 	d.Partial(false)
 
-	pluginRequest, err := createKongPluginRequestFromResourceData(d)
+	pluginRequest, err := createKongPluginRequestFromResourceData(d, meta)
 	if err != nil {
 		return err
 	}
@@ -154,13 +159,23 @@ func resourceKongPluginDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func createKongPluginRequestFromResourceData(d *schema.ResourceData) (*gokong.PluginRequest, error) {
+func createKongPluginRequestFromResourceData(d *schema.ResourceData, meta interface{}) (*gokong.PluginRequest, error) {
 
 	pluginRequest := &gokong.PluginRequest{}
 
 	pluginRequest.Name = readStringFromResource(d, "name")
 	pluginRequest.ConsumerId = readIdPtrFromResource(d, "consumer_id")
 	pluginRequest.ServiceId = readIdPtrFromResource(d, "service_id")
+
+	// If service_id is not provided, check if service_name is provided and get its id
+	if serviceName := readStringFromResource(d, "service_name"); serviceName != "" {
+		service, err := meta.(*config).adminClient.Services().GetServiceByName(serviceName)
+		if err == nil && service != nil && service.Id != nil {
+			x := gokong.Id(*service.Id)
+			pluginRequest.ServiceId = &x
+		}
+	}
+
 	pluginRequest.RouteId = readIdPtrFromResource(d, "route_id")
 	pluginRequest.Enabled = readBoolPtrFromResource(d, "enabled")
 
