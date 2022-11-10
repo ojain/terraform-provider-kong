@@ -39,6 +39,11 @@ func resourceKongPlugin() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
+			"service_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: false,
+			},
 			"route_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -223,7 +228,7 @@ func createKongPluginRequestFromResourceData(d *schema.ResourceData) (*kong.Plug
 			ID: serviceID,
 		}
 	} else { // Check for service_name
-		serviceName := readIdPtrFromResource(d, "service_name")
+		serviceName := readStringPtrFromResource(d, "service_name")
 		if serviceName != nil {
 			pluginRequest.Service = &kong.Service{
 				Name: serviceName,
