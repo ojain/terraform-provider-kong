@@ -84,26 +84,14 @@ func TestAccKongPluginForASpecificConsumer(t *testing.T) {
 	})
 }
 
-func TestAccKongPluginForASpecificService(t *testing.T) {
+func TestAccKongPluginForASpecificServiceID(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckKongPluginDestroy,
 		Steps: []resource.TestStep{
-			//{
-			//	Config: testCreatePluginForASpecificServiceConfig,
-			//	Check: resource.ComposeTestCheckFunc(
-			//		testAccCheckKongPluginExists("kong_plugin.rate_limit"),
-			//		testAccCheckKongServiceExists("kong_service.service"),
-			//		testAccCheckForChildIDCorrect("kong_service.service", "kong_plugin.rate_limit", "service_id"),
-			//		resource.TestCheckResourceAttr("kong_plugin.rate_limit", "name", "rate-limiting"),
-			//		resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.#", "2"),
-			//		resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.0", "foo"),
-			//		resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.1", "bar"),
-			//	),
-			//},
 			{
-				Config: testCreatePluginForASpecificServiceNameConfig,
+				Config: testCreatePluginForASpecificServiceIdConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKongPluginExists("kong_plugin.rate_limit"),
 					testAccCheckKongServiceExists("kong_service.service"),
@@ -114,17 +102,39 @@ func TestAccKongPluginForASpecificService(t *testing.T) {
 					resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.1", "bar"),
 				),
 			},
-			//{
-			//	Config: testUpdatePluginForASpecificServiceConfig,
-			//	Check: resource.ComposeTestCheckFunc(
-			//		testAccCheckKongPluginExists("kong_plugin.rate_limit"),
-			//		testAccCheckKongServiceExists("kong_service.service"),
-			//		testAccCheckForChildIDCorrect("kong_service.service", "kong_plugin.rate_limit", "service_id"),
-			//		resource.TestCheckResourceAttr("kong_plugin.rate_limit", "name", "rate-limiting"),
-			//		resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.#", "1"),
-			//		resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.0", "foo"),
-			//	),
-			//},
+			{
+				Config: testUpdatePluginForASpecificServiceIdConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKongPluginExists("kong_plugin.rate_limit"),
+					testAccCheckKongServiceExists("kong_service.service"),
+					testAccCheckForChildIDCorrect("kong_service.service", "kong_plugin.rate_limit", "service_id"),
+					resource.TestCheckResourceAttr("kong_plugin.rate_limit", "name", "rate-limiting"),
+					resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.#", "1"),
+					resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.0", "foo"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKongPluginForASpecificServiceName(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKongPluginDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:             testCreatePluginForASpecificServiceNameConfig,
+				ExpectNonEmptyPlan: true,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKongPluginExists("kong_plugin.rate_limit"),
+					testAccCheckKongServiceExists("kong_service.service"),
+					testAccCheckForChildIDCorrect("kong_service.service", "kong_plugin.rate_limit", "service_id"),
+					resource.TestCheckResourceAttr("kong_plugin.rate_limit", "name", "rate-limiting"),
+					resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.#", "2"),
+					resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.0", "foo"),
+					resource.TestCheckResourceAttr("kong_plugin.rate_limit", "tags.1", "bar"),
+				),
+			},
 		},
 	})
 }
@@ -361,7 +371,7 @@ EOT
 }
 `
 
-const testCreatePluginForASpecificServiceConfig = `
+const testCreatePluginForASpecificServiceIdConfig = `
 resource "kong_service" "service" {
 	name     = "test"
 	protocol = "http"
@@ -382,28 +392,7 @@ EOT
 }
 `
 
-const testCreatePluginForASpecificServiceNameConfig = `
-resource "kong_service" "service" {
-	name     = "test2"
-	protocol = "http"
-	host     = "test.org"
-}
-
-resource "kong_plugin" "rate_limit" {
-	name        = "rate-limiting"
-	service_name = "test2"
-	tags       = ["foo", "bar"]
-	config_json = <<EOT
-	{
-		"second": 10,
-		"hour" : 2000
-	}
-	
-EOT
-}
-`
-
-const testUpdatePluginForASpecificServiceConfig = `
+const testUpdatePluginForASpecificServiceIdConfig = `
 resource "kong_service" "service" {
 	name     = "test"
 	protocol = "http"
@@ -420,8 +409,27 @@ resource "kong_plugin" "rate_limit" {
 		"hour" : 4000
 	}
 EOT
+}`
+
+const testCreatePluginForASpecificServiceNameConfig = `
+resource "kong_service" "service" {
+	name     = "test"
+	protocol = "http"
+	host     = "test2.org"
 }
-`
+
+resource "kong_plugin" "rate_limit" {
+	name        = "rate-limiting"
+	service_name = "${kong_service.service.name}"
+	tags       = ["foo", "bar"]
+	config_json = <<EOT
+	{
+		"second": 10,
+		"hour" : 2000
+	}
+	
+EOT
+}`
 
 const testCreatePluginForASpecificRouteConfig = `
 resource "kong_service" "service" {

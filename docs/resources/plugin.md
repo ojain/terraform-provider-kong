@@ -36,7 +36,7 @@ EOT
 }
 ```
 
-To apply a plugin to a service use the `service_id` property, for example:
+To apply a plugin to a service use the `service_id` or `service_name` property, for example:
 
 ```hcl
 resource "kong_service" "service" {
@@ -84,6 +84,7 @@ EOT
 * `plugin_name` - (Required) the name of the plugin you want to configure
 * `consumer_id` - (Optional) the consumer id you want to configure the plugin for
 * `service_id`  - (Optional) the service id that you want to configure the plugin for
+* `service_name`  - (Optional) the service name that you want to configure the plugin for. In case both `service_id` and `service_name` are provided, `service_id` will be given precedence
 * `route_id` - (Optional) the route id that you want to configure the plugin for
 * `enabled` - (Optional) whether the plugin is enabled or not, use if you want to keep the plugin installed but disable it
 * `config_json` - (Optional) this is the configuration json for how you want to configure the plugin.  The json is passed straight through to kong as is.  You can get the json config from the Kong documentation
